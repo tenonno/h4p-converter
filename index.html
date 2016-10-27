@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>H4P Converter</title>
+
+    <style>
+        body {
+            background: #000;
+            color: #0f0;
+            font-size: 24px;
+            font-family: consolas;
+        }
+
+        a {
+            color: #0f0;
+            text-decoration: underline;
+        }
+
+        input {
+            background: #000;
+            color: #0f0;
+            font-size: 24px;
+            font-family: consolas;
+            border: solid 2px;
+        }
+    </style>
+
+    <script>
+        console.info = new Proxy(console.info, {
+            apply(target, thisArg, argumentsList) {
+                target.apply(thisArg, argumentsList);
+                document.body.innerHTML += argumentsList + '<br />';
+            }
+        });
+        console.error = new Proxy(console.error, {
+            apply(target, thisArg, argumentsList) {
+                target.apply(thisArg, argumentsList);
+                document.body.innerHTML += argumentsList + '<br />';
+            }
+        });
+    </script>
+
+    <script src="core.js" charset="utf-8"></script>
+</head>
+
+<body>
+
+    <a>chrome://flags/#enable-javascript-harmony</a>
+    <br />
+    <br /> URL <input type="text" id="stage" value="" />
+    <input type="button" id="start" value="start" /><br />
+
+
+
+</body>
+
+</html>
