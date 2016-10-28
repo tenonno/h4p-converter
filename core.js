@@ -54,11 +54,7 @@ const emojiCollection = [];
 
 
 
-const option = {
-
-    onLoad: true,
-
-};
+const option = {};
 
 
 
@@ -138,31 +134,39 @@ class Script {
             this.text = `require('enchantjs/enchant');\n` + this.text;
         }
 
+        if (option.emoji) {
 
-        // emoji 対策
-        const emoji = 'require(\'https://cdn.jsdelivr.net/emojione';
+            // emoji 対策
+            const emoji = 'require(\'https://cdn.jsdelivr.net/emojione';
 
-        if (this.text.includes(emoji)) {
+            if (this.text.includes(emoji)) {
 
-            const index = this.text.indexOf(emoji);
-            this.text = stringInsert(this.text, index, 'window.emojione = ');
-            this.text = this.text.replace('element.src.substr(33)', 'element.getAttribute(\'src\').substr(27).replace(/\\?v\\=(\\d\\.?){3}/,\'\')');
+                const index = this.text.indexOf(emoji);
+                // this.text = stringInsert(this.text, index, 'window.emojione = ');
+                this.text = this.text.replace('element.src.substr(33)', 'element.getAttribute(\'src\').substr(27).replace(/\\?v\\=(\\d\\.?){3}/,\'\')');
+
+            }
 
         }
 
+
         // 1.e-5 のような数値の対策
-        this.text = this.text.replace(/\d+\.e[\+|\-]\d+/g, function(v) {
-            return `'${v}' * 1.0`;
-        });
+        if (option.number) {
+
+            this.text = this.text.replace(/\d+\.e[\+|\-]\d+/g, function(v) {
+                return `'${v}' * 1.0`;
+            });
+
+        }
 
 
         // game.onload を別ファイルにする
-        if (name === 'game') {
+        if (option.onload && name === 'game') {
             (function() {
 
                 const text = this.text;
 
-                const e1 = /^game\.onload \= function\(.*\) \{/gm;
+                const e1 = /^game\.onload \= function *\(.*\) \{/gm;
 
                 const e2 = /^\}\;/gm;
 
@@ -181,6 +185,8 @@ class Script {
                     if (!end) break;
                     ends.push(end);
                 }
+
+                console.warn(begins, ends);
 
                 const onloads = [];
 
@@ -415,9 +421,11 @@ class H4PConverter {
 
             const text = localStorage.getItem(url);
 
+            console.info('... from cache');
+
+
             await H4PConverter.text(mod, text);
 
-            console.info('... from local storage');
 
             return;
 
@@ -535,7 +543,9 @@ class H4PConverter {
 
                     new Resource(file, base64, url);
 
+
                     console.info('... from cache');
+
 
                     continue;
 
@@ -547,7 +557,12 @@ class H4PConverter {
                 const blob = await response.blob();
                 const base64 = await blobToBase64(blob);
 
-                localStorage.setItem(url, base64);
+                try {
+                    localStorage.setItem(url, base64);
+                } catch (e) {
+                    // サイズが大きすぎて保存できない場合がある
+                    console.error(e);
+                }
 
                 new Resource(file, base64, url);
 
@@ -599,9 +614,17 @@ const $ = selector => document.querySelector(selector);
 
     await new Promise(resolve => $('#start').addEventListener('click', resolve));
 
+
+    option.emoji = $('#option-emoji').checked;
+    option.onload = $('#option-onload').checked;
+    option.number = $('#option-number').checked;
+    option.file = $('#option-file').checked;
+
+    console.log(option);
+
+
     const stageID = $('#stage').value.match(/\d/g).join('');
 
-    console.info(stageID);
 
     // ステージ API の URL
     const url = `https://hackforplay.xyz/api/stages/${stageID}`;
@@ -621,7 +644,7 @@ const $ = selector => document.querySelector(selector);
 
 
 
-    console.info('start');
+    console.info(`start: ${stageID}`);
 
 
 
@@ -666,59 +689,65 @@ ${stage.script.raw_code}
     await H4PConverter.text('', gameMainScript.text, true);
 
 
+    if (option.emoji) {
 
 
 
-    await new Promise(function(resolve) {
-        const script = document.createElement('script');
-        script.onload = resolve;
-        script.src = 'https://cdn.jsdelivr.net/emojione/2.2.5/lib/js/emojione.min.js';
-        document.body.appendChild(script);
-    });
 
 
-    var emojiSet = new Set();
-
-    var b = emojiCollection.forEach(e => {
-
-        var e2 = emojione.toImage(e);
-
-
-        var w = e2.match(/(?<=src=\").+(?=\")/);
-
-        if (!w) return;
-
-        emojiSet.add(w[0]);
-
-    });
-
-    Array.from(emojiSet).map(url => {
-        return 'https:' + url;
-    }).forEach(async function(url) {
+        await new Promise(function(resolve) {
+            const script = document.createElement('script');
+            script.onload = resolve;
+            script.src = 'https://cdn.jsdelivr.net/emojione/2.2.5/lib/js/emojione.min.js';
+            document.body.appendChild(script);
+        });
 
 
-        let file = `/hackforplay/emojione${url.substr(33)}`;
+        var emojiSet = new Set();
+
+        var b = emojiCollection.forEach(e => {
+
+            var e2 = emojione.toImage(e);
 
 
-        file = file.replace(/\?v\=(\d\.?){3}/, '');
+            var w = e2.match(/(?<=src=\").+(?=\")/);
 
-        console.error(file);
+            if (!w) return;
 
-        if (localStorage.getItem(url)) {
-            const base64 = localStorage.getItem(url);
-            return new Resource(file, base64, url);
-        }
+            emojiSet.add(w[0]);
+
+        });
+
+        Array.from(emojiSet).map(url => {
+            return 'https:' + url;
+        }).forEach(async function(url) {
 
 
-        const response = await fetch(url);
-        const blob = await response.blob();
-        const base64 = await blobToBase64(blob);
+            let file = `/hackforplay/emojione${url.substr(33)}`;
 
-        localStorage.setItem(url, base64);
 
-        new Resource(file, base64, url);
+            file = file.replace(/\?v\=(\d\.?){3}/, '');
 
-    });
+            console.error(file);
+
+            if (localStorage.getItem(url)) {
+                const base64 = localStorage.getItem(url);
+                return new Resource(file, base64, url);
+            }
+
+
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const base64 = await blobToBase64(blob);
+
+            localStorage.setItem(url, base64);
+
+            new Resource(file, base64, url);
+
+        });
+
+
+    }
 
 
 
@@ -731,6 +760,16 @@ ${stage.script.raw_code}
 
     dom += h4p;
 
+    const fetchRPG = `
+RPGObject.prototype.fetch = function(name) {
+    const object = this;
+    enchant.Surface.load(name, function() {
+        object.image = this;
+        object.width = this.width;
+        object.height = this.height;
+    });
+};
+    `;
 
     const html = `
 
@@ -769,6 +808,7 @@ Element.prototype.setAttribute = function(key) {
 
 require('stage-info');
 require('fetch-loader');
+require('style');
 require('game');
 
 Hack._exportJavascriptHint = function() {};
@@ -795,10 +835,29 @@ Hack.stageInfo = {
     <\/script>
 
 
+<script class="${namespace}" name="style.js" data-type="text/javascript" author-name="" author-url="" type="hack">
+const style = document.createElement('style');
+style.textContent = \`
+textarea.log {
+    color: #fff;
+    font: bold large PixelMplus, sans-serif;
+    border: 3px solid #fff;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 3px;
+}
+\`;
+document.body.appendChild(style);
+    <\/script>
 
     <script class="${namespace}" name="fetch-loader.js" data-type="text/javascript" author-name="" author-url="" type="hack">
 
-require('enchantjs/enchant');
+
+require('${stage.implicit_mod}');
+
+${stage.implicit_mod === 'hackforplay/rpg-kit-main' ? fetchRPG : ''}
+
+
 
 enchant.Surface.load = function(src, callback, onerror) {
     const image = new Image();
@@ -915,7 +974,13 @@ enchant.WebAudioSound.load = function(src, type, callback, onerror) {
 
     const download = document.createElement('a');
 
-    download.download = stage.Title + '.html' || downloadFileName;
+    download.download = downloadFileName;
+
+    if (option.file) {
+        download.download = stage.Title + '.html';
+    }
+
+
     download.href = window.URL.createObjectURL(htmlBlob);
 
     download.click();

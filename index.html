@@ -25,6 +25,54 @@
             font-family: consolas;
             border: solid 2px;
         }
+
+        input[type=checkbox] {
+            display: none;
+        }
+
+        .checkbox {
+            box-sizing: border-box;
+            position: relative;
+            display: inline-block;
+            margin: 0 20px 8px 0;
+            padding: 4px 4px 4px 3rem;
+            border-radius: 8px;
+            background-color: #000;
+            vertical-align: middle;
+            cursor: pointer;
+        }
+
+        .checkbox:after {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            display: block;
+            margin-top: -10px;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #0f0;
+            border-radius: 6px;
+            content: '';
+        }
+
+        .checkbox:before {
+            position: absolute;
+            top: 50%;
+            left: 21px;
+            display: block;
+            margin-top: -7px;
+            width: 5px;
+            height: 9px;
+            border-right: 3px solid #0f0;
+            border-bottom: 3px solid #0f0;
+            content: '';
+            opacity: 0;
+            transform: rotate(45deg);
+        }
+
+        input[type=checkbox]:checked+.checkbox:before {
+            opacity: 1;
+        }
     </style>
 
     <script>
@@ -47,10 +95,27 @@
 
 <body>
 
+    <input type="checkbox" id="option-file" checked />
+    <label for="option-file" class="checkbox">ファイル名をステージ名にする</label>
+    <br />
+
+    <input type="checkbox" id="option-emoji" checked />
+    <label for="option-emoji" class="checkbox">絵文字の解析をする</label>
+    <br />
+
+    <input type="checkbox" id="option-onload" checked />
+    <label for="option-onload" class="checkbox">onload を分離する</label>
+    <br />
+
+    <input type="checkbox" id="option-number" checked />
+    <label for="option-number" class="checkbox">指数表記の対策をする</label>
+    <br />
+
+
     <a>chrome://flags/#enable-javascript-harmony</a><br />
     <a href="https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi">Allow-Control-Allow-Origin: *</a><br>
     <br />
-    <br /> URL <input type="text" id="stage" value="" />
+    <br /> <input type="checkbox" value="3"><br /> URL <input type="text" id="stage" value="" />
     <input type="button" id="start" value="start" /><br />
 
 
