@@ -14,7 +14,7 @@ const downloadFileName = 'h4p.html';
 
 // h4p.js の URL
 // const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p.js';
-const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p-alpha-16.js';
+const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p-alpha-21.js';
 
 // 読み込めないファイルの対策
 const alias = {
@@ -25,7 +25,7 @@ const alias = {
 
 
 const requireAlias = {
-
+    'https://connect.soundcloud.com/sdk/sdk-3.0.0.js': 'soundcloud/sdk-3.0.0.js',
 };
 
 
@@ -251,6 +251,27 @@ class Script {
 
 
         // this.text = beautify(this.text);
+
+
+        if (option.alias) {
+
+
+
+            for (let [name, alias] of Object.entries(requireAlias)) {
+
+
+                this.text = this.text.replace(name, alias);
+
+                if (this.name === name) {
+                    this.name = alias;
+                }
+
+                console.log(name, alias);
+            }
+
+
+
+        }
 
 
         scripts.push(this);
@@ -619,6 +640,8 @@ const $ = selector => document.querySelector(selector);
     option.onload = $('#option-onload').checked;
     option.number = $('#option-number').checked;
     option.file = $('#option-file').checked;
+    option.env = $('#option-env').checked;
+    option.alias = $('#option-alias').checked;
 
     console.log(option);
 
@@ -669,6 +692,33 @@ const $ = selector => document.querySelector(selector);
 
 
     console.log(stage);
+
+    const env = `
+
+<script
+    class="${namespace}"
+    name=".env"
+    data-type="application/json"
+
+    is-read-only
+    author-name=""
+    author-url=""
+    type="hack"
+>
+{
+    "DEBUG": [
+        true,
+        "boolean",
+        "A flag means test mode"
+    ],
+    "進捗": [
+        false,
+        "boolean",
+        "進捗どうですか？"
+    ]
+}
+</script>
+    `;
 
 
     // ブラウザ版 H4P で書いてるコード
@@ -785,7 +835,6 @@ RPGObject.prototype.fetch = function(name) {
 	<!-- Config of the app -->
     <div class="h4p__app" data-target=".${namespace}"></div>
 
-
 	<script>
 
 // iframe を生成するときに sandbox を書き換える
@@ -806,9 +855,9 @@ Element.prototype.setAttribute = function(key) {
 
     <script class="${namespace}" name="main.js" data-type="text/javascript" is-entry-point author-name="" author-url="" type="hack">
 
-require('stage-info');
-require('fetch-loader');
-require('style');
+require('browser-h4p/stage-info');
+require('browser-h4p/fetch-loader');
+require('browser-h4p/style');
 require('game');
 
 Hack._exportJavascriptHint = function() {};
@@ -821,7 +870,7 @@ Hack.start();
     <\/script>
 
 
-    <script class="${namespace}" name="stage-info.js" data-type="text/javascript" author-name="" author-url="" type="hack">
+    <script class="${namespace}" name="browser-h4p/stage-info.js" data-type="text/javascript" author-name="" author-url="" type="hack">
 
 require('enchantjs/enchant');
 
@@ -835,7 +884,7 @@ Hack.stageInfo = {
     <\/script>
 
 
-<script class="${namespace}" name="style.js" data-type="text/javascript" author-name="" author-url="" type="hack">
+<script class="${namespace}" name="browser-h4p/style.js" data-type="text/javascript" author-name="" author-url="" type="hack">
 const style = document.createElement('style');
 style.textContent = \`
 textarea.log {
@@ -850,14 +899,14 @@ textarea.log {
 document.body.appendChild(style);
     <\/script>
 
-    <script class="${namespace}" name="fetch-loader.js" data-type="text/javascript" author-name="" author-url="" type="hack">
+    <script class="${namespace}" name="browser-h4p/fetch-loader.js" data-type="text/javascript" author-name="" author-url="" type="hack">
 
 
 require('${stage.implicit_mod}');
 
 ${stage.implicit_mod === 'hackforplay/rpg-kit-main' ? fetchRPG : ''}
 
-
+window._Promise = Promise;
 
 enchant.Surface.load = function(src, callback, onerror) {
     const image = new Image();
@@ -953,13 +1002,8 @@ enchant.WebAudioSound.load = function(src, type, callback, onerror) {
     ${dom}
 
 
+    ${option.env ? env : ''}
 
-<x-exports class="${namespace}__exports">
-{
-    "env": [["DEBUG", true, "A flag means test mode"]],
-    "palette": {}
-}
-</x-exports>
 
 </body>
 
