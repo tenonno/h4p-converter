@@ -14,7 +14,8 @@ const downloadFileName = 'h4p.html';
 
 // h4p.js の URL
 // const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p.js';
-const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p-alpha-21.js';
+const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p-alpha-22e.js';
+
 
 // 読み込めないファイルの対策
 const alias = {
@@ -251,6 +252,8 @@ class Script {
 
 
         // this.text = beautify(this.text);
+        // SoundCloud は使えないから対策する
+        this.text = this.text.replace(/Hack\.openSoundCloud\(/g, '// Hack.openSoundCloud(');
 
 
         if (option.alias) {
@@ -315,8 +318,7 @@ class Resource {
   author-url=""
   type="hack"
 >
-${this.text}
-            <\/script>
+${this.text}<\/script>
     	`;
     }
 
@@ -893,16 +895,16 @@ Hack.stageInfo = {
 
 <script class="${namespace}" name="browser-h4p/style.js" data-type="text/javascript" author-name="" author-url="" type="hack">
 const style = document.createElement('style');
-style.textContent = \`
-textarea.log {
-    color: #fff;
-    font: bold large PixelMplus, sans-serif;
-    border: 3px solid #fff;
-    border-radius: 10px;
-    padding: 10px;
-    margin: 3px;
-}
-\`;
+
+style.textContent = '' +
+'textarea.log {' +
+'color: #fff;' +
+'font: bold large PixelMplus, sans-serif;' +
+'border: 3px solid #fff;' +
+'border-radius: 10px;' +
+'padding: 10px;' +
+'margin: 3px;';
+
 document.body.appendChild(style);
     <\/script>
 
