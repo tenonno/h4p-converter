@@ -839,9 +839,16 @@ RPGObject.prototype.fetch = function(name) {
 
 // iframe を生成するときに sandbox を書き換える
 const setAttribute = Element.prototype.setAttribute;
-Element.prototype.setAttribute = function(key) {
+Element.prototype.setAttribute = function(key, value) {
     if (key === 'sandbox') {
-    	return setAttribute.apply(this, ['sandbox', 'allow-popups allow-scripts']);
+
+        if (value.indexOf('allow-popups') === -1) {
+            value += ' allow-popups';
+        }
+        if (value.indexOf('allow-scripts') === -1) {
+            value += ' allow-scripts';
+        }
+    	return setAttribute.apply(this, ['sandbox', value]);
     }
     setAttribute.apply(this, arguments);
 };
