@@ -285,6 +285,18 @@ class Script {
 
     domConvert() {
 
+
+        // menuOpener を削除する
+        if (option.menu && this.name === 'hackforplay/hack') {
+
+            this.text = this.text.replace(/^.*var opener \=.+/gm, text => {
+
+                return text + '\n\t\tvisible: false,';
+            });
+
+
+        }
+
         // ui.enchant が先に呼ばれる対策
         // require.config から修正できる？
         if (this.name === 'soundcloud/sdk-3.0.0.js') {
@@ -294,7 +306,8 @@ export default {
         console.log('soundcloud');
     }
 }
-`;
+            `;
+
         }
 
         this.text = this.text.replace(`this._element.type = 'textarea';`, '// @removed');
@@ -711,6 +724,8 @@ const $ = selector => document.querySelector(selector);
     option.env = $('#option-env').checked;
     option.alias = $('#option-alias').checked;
     option.import = $('#option-import').checked;
+    option.menu = $('#option-menu').checked;
+    option.fixMod = $('#option-fixMod').checked;
 
     console.log(option);
 
@@ -759,6 +774,9 @@ const $ = selector => document.querySelector(selector);
         return;
     }
 
+    const isRPG = stage.implicit_mod === 'hackforplay/rpg-kit-main';
+
+
 
     console.log(stage);
 
@@ -780,14 +798,22 @@ const $ = selector => document.querySelector(selector);
         "boolean",
         "A flag means test mode"
     ],
-    "進捗": [
-        false,
-        "boolean",
-        "進捗どうですか？"
+    "TITLE": [
+        "${stage.title}",
+        "string",
+        "title"
     ]
 }
 </script>
     `;
+
+
+
+    const fixModText = `
+require('tenonno/camera-fix-v2');
+require('tenonno/core-resize-v2');
+    `;
+
 
 
     // ブラウザ版 H4P で書いてるコード
@@ -795,6 +821,7 @@ const $ = selector => document.querySelector(selector);
 
 define(function (require, exports, module) {
 require('${stage.implicit_mod}');
+${option.fixMod && isRPG ? fixModText : ''}
 ${stage.script.raw_code}
 });
 
@@ -1079,6 +1106,22 @@ enchant.WebAudioSound.load = function(src, type, callback, onerror) {
 
 
     ${dom}
+
+
+
+    <script
+      class="${namespace}"
+      name=".babelrc"
+      data-type="application/json"
+      author-name=""
+      author-url=""
+      type="hack"
+    >
+    {
+    	"presets": [
+    		"es2015"
+    	]
+    }</script>
 
 
     ${option.env ? env : ''}
