@@ -14,7 +14,7 @@ const downloadFileName = 'h4p.html';
 
 // h4p.js の URL
 // const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p.js';
-const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p-alpha-22e.js';
+const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p-alpha-24.js';
 
 
 // 読み込めないファイルの対策
@@ -221,7 +221,7 @@ class Script {
                 const $onLoad = require('game-onload');
                 ` + text.substr(0, onload.begin) + 'game.onload = $onLoad;\n' + text.substr(onload.end);
 
-                const onloadFile = onload.value.replace(/^game\.onload/, 'module.exports');
+                const onloadFile = onload.value.replace(/^game\.onload \=/, 'export default');
 
                 //let file2 =
 
@@ -277,10 +277,71 @@ class Script {
         }
 
 
+
+
         scripts.push(this);
     }
 
+
+    domConvert() {
+
+        // ui.enchant が先に呼ばれる対策
+        // require.config から修正できる？
+        if (this.name === 'soundcloud/sdk-3.0.0.js') {
+            this.text = `
+export default {
+    initialize() {
+        console.log('soundcloud');
+    }
+}
+`;
+        }
+
+        this.text = this.text.replace(`this._element.type = 'textarea';`, '// @removed');
+
+
+        if (option.import) {
+
+            this.text = this.text.replace(/^.+\=.+require\(\'.+\'\)/gm, function(v) {
+
+                const member = v.split('=')[0].split(' ').filter(t => t).pop();
+
+                var name = member.split('.').pop();
+
+
+                const module = v.match(/(?<=.+\').+(?=\')/)[0]
+
+                var aaa = member.includes('.') ? `;\n${member} = ${name}` : '';
+
+                console.log(member, name, module);
+
+                return `import ${name} from '${module}'${aaa}`;
+
+                //import myDefault from "my-module";
+
+
+            });
+
+
+
+            this.text = this.text.replace(/^.*require\(\'.+\'\)/gm, function(v) {
+
+
+                const module = v.match(/(?<=.+\').+(?=\')/)[0]
+
+                return `import '${module}'`;
+
+            });
+
+        }
+
+    }
+
+
     dom() {
+
+        this.domConvert();
+
         return `
             <script class="${namespace}" name="${this.name}.js" data-type="text/javascript" author-name="" author-url="" type="hack">
                 ${this.text}
@@ -457,8 +518,13 @@ class H4PConverter {
         const response = await fetch(url);
         const text = await response.text();
 
-        localStorage.setItem(url, text);
 
+        try {
+            localStorage.setItem(url, text);
+        } catch (e) {
+            // サイズが大きすぎて保存できない場合がある
+            console.error(e);
+        }
         await H4PConverter.text(mod, text);
 
     }
@@ -644,6 +710,7 @@ const $ = selector => document.querySelector(selector);
     option.file = $('#option-file').checked;
     option.env = $('#option-env').checked;
     option.alias = $('#option-alias').checked;
+    option.import = $('#option-import').checked;
 
     console.log(option);
 
@@ -864,15 +931,15 @@ Element.prototype.setAttribute = function(key, value) {
 
     <script class="${namespace}" name="main.js" data-type="text/javascript" is-entry-point author-name="" author-url="" type="hack">
 
-require('browser-h4p/stage-info');
-require('browser-h4p/fetch-loader');
-require('browser-h4p/style');
-require('game');
+import 'browser-h4p/stage-info';
+import 'browser-h4p/fetch-loader';
+import 'browser-h4p/style';
+import 'game';
 
-Hack._exportJavascriptHint = function() {};
+import env from 'env';
 
-const env = require('env');
 env.VIEW = enchant.Core.instance.rootScene._layers.Canvas._element;
+Hack._exportJavascriptHint = function() {};
 
 Hack.start();
 
@@ -881,7 +948,7 @@ Hack.start();
 
     <script class="${namespace}" name="browser-h4p/stage-info.js" data-type="text/javascript" author-name="" author-url="" type="hack">
 
-require('enchantjs/enchant');
+import 'enchantjs/enchant';
 
 window.Hack = new enchant.EventTarget();
 
@@ -896,26 +963,29 @@ Hack.stageInfo = {
 <script class="${namespace}" name="browser-h4p/style.js" data-type="text/javascript" author-name="" author-url="" type="hack">
 const style = document.createElement('style');
 
-style.textContent = '' +
-'textarea.log {' +
-'color: #fff;' +
-'font: bold large PixelMplus, sans-serif;' +
-'border: 3px solid #fff;' +
-'border-radius: 10px;' +
-'padding: 10px;' +
-'margin: 3px;';
+style.textContent = \`
+
+textarea.log {
+    color: #fff,
+    font: bold large PixelMplus, sans-serif;
+    border: 3px solid #fff;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 3px;
+}
+
+\`;
 
 document.body.appendChild(style);
     <\/script>
 
     <script class="${namespace}" name="browser-h4p/fetch-loader.js" data-type="text/javascript" author-name="" author-url="" type="hack">
 
-
-require('${stage.implicit_mod}');
+import '${stage.implicit_mod}';
 
 ${stage.implicit_mod === 'hackforplay/rpg-kit-main' ? fetchRPG : ''}
 
-window._Promise = Promise;
+// window._Promise = Promise;
 
 enchant.Surface.load = function(src, callback, onerror) {
     const image = new Image();
