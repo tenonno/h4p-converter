@@ -2,6 +2,7 @@
 
 console.clear();
 
+let isAP = null;
 
 
 // ステージ ID
@@ -218,8 +219,8 @@ class Script {
 
 
                 var t2 = `
-                const $onLoad = require('game-onload');
-                ` + text.substr(0, onload.begin) + 'game.onload = $onLoad;\n' + text.substr(onload.end);
+                const onLoad = require('game-onload');
+                ` + text.substr(0, onload.begin) + 'game.onload = onLoad;\n' + text.substr(onload.end);
 
                 const onloadFile = onload.value.replace(/^game\.onload \=/, 'export default');
 
@@ -284,6 +285,31 @@ class Script {
 
 
     domConvert() {
+
+
+
+        if (option.ap && isAP) {
+
+
+            [
+                'BGM',
+                'input',
+                'cam',
+                'touchMode',
+                'touchX',
+                'touchY',
+                'arrayframe',
+                'makeCounter',
+                'boolCollided'
+
+            ].forEach(variable => {
+
+                this.text = this.text.replace(variable, `window.${variable}`);
+
+            });
+
+
+        }
 
 
         // menuOpener を削除する
@@ -726,6 +752,7 @@ const $ = selector => document.querySelector(selector);
     option.import = $('#option-import').checked;
     option.menu = $('#option-menu').checked;
     option.fixMod = $('#option-fixMod').checked;
+    option.ap = $('#option-ap').checked;
 
     console.log(option);
 
@@ -777,6 +804,10 @@ const $ = selector => document.querySelector(selector);
     const isRPG = stage.implicit_mod === 'hackforplay/rpg-kit-main';
 
 
+    isAP = stage.implicit_mod === 'hackforplay/ap-kit-main';
+
+
+
 
     console.log(stage);
 
@@ -810,8 +841,9 @@ const $ = selector => document.querySelector(selector);
 
 
     const fixModText = `
-require('tenonno/camera-fix-v2');
 require('tenonno/core-resize-v2');
+require('tenonno/camera-fix-v2');
+require('tenonno/player-input');
     `;
 
 
@@ -966,7 +998,9 @@ import 'game';
 import env from 'env';
 
 env.VIEW = enchant.Core.instance.rootScene._layers.Canvas._element;
-Hack._exportJavascriptHint = function() {};
+Hack._exportJavascriptHint = () => {};
+
+
 
 Hack.start();
 
@@ -993,7 +1027,7 @@ const style = document.createElement('style');
 style.textContent = \`
 
 textarea.log {
-    color: #fff,
+    color: #fff;
     font: bold large PixelMplus, sans-serif;
     border: 3px solid #fff;
     border-radius: 10px;
@@ -1151,6 +1185,32 @@ enchant.WebAudioSound.load = function(src, type, callback, onerror) {
 
     download.click();
 
+    (async function() {
+
+
+        const res = await fetch(stage.thumbnail);
+
+
+        const d = await res.blob();
+
+
+
+
+        const download = document.createElement('a');
+
+        download.download = 'thumbnail.png';
+
+
+
+        if (option.file) {
+            download.download = stage.title + '.png';
+        }
+
+        download.href = window.URL.createObjectURL(d);
+
+        download.click();
+
+    })();
 
 
 
