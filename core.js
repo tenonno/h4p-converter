@@ -4,6 +4,8 @@ console.clear();
 
 let isAP = null;
 
+let cometSound = null;
+
 
 // ステージ ID
 
@@ -51,8 +53,6 @@ const resources = [];
 
 
 const emojiCollection = [];
-
-
 
 
 
@@ -252,9 +252,8 @@ class Script {
         }
 
 
-        // this.text = beautify(this.text);
         // SoundCloud は使えないから対策する
-        this.text = this.text.replace(/Hack\.openSoundCloud\(/g, '// Hack.openSoundCloud(');
+        this.text = this.text.replace(/Hack\.openSoundCloud\(/g, '(function(){})(');
 
 
         if (option.alias) {
@@ -288,7 +287,7 @@ class Script {
 
 
 
-        if (option.ap && isAP) {
+        if (option.ap &&  isAP) {
 
 
             [
@@ -374,6 +373,16 @@ export default {
 
         }
 
+
+
+        if (option.beautify) {
+
+            this.text = beautify(this.text).replace(/^ /gm, '');
+
+        }
+
+
+
     }
 
 
@@ -395,6 +404,8 @@ class Resource {
 
     constructor(name, text, url, type = 'image/png') {
 
+
+        // yukison/birthday-song-cover.png
 
         this.name = name;
         this.text = text;
@@ -440,7 +451,7 @@ const getResourceType = function(url) {
 
 
 
-    const audioTypes = ['mp3'];
+    const audioTypes = ['mp3', 'wav'];
 
     for (let type of audioTypes) {
 
@@ -646,6 +657,22 @@ class H4PConverter {
 
             for (let file of preloadFiles) {
 
+
+                // コメット対策
+
+                if (file === 'Hack.coverImagePath') {
+
+                    continue;
+                    // file = 'yukison/birthday-song-cover.png';
+
+                }
+
+                if (file === 'Hack.soundEffectPath') {
+                    continue;
+
+                }
+
+
                 let url = `https://embed.hackforplay.xyz/hackforplay/${file}`;
 
                 // if (file.startsWith('http')) {
@@ -663,6 +690,9 @@ class H4PConverter {
 
                 loadedFiles.push(url);
                 loadedNames.push(name);
+
+
+
 
                 if (localStorage.getItem(url)) {
 
@@ -733,6 +763,7 @@ class H4PConverter {
 //const stageID = 17511;
 
 const $ = selector => document.querySelector(selector);
+const $$ = selector => Array.from(document.querySelectorAll(selector));
 
 
 (async function() {
@@ -753,6 +784,15 @@ const $ = selector => document.querySelector(selector);
     option.menu = $('#option-menu').checked;
     option.fixMod = $('#option-fixMod').checked;
     option.ap = $('#option-ap').checked;
+
+    $$('#options>input').forEach(input => {
+
+        const id = input.id.split('-')[1];
+
+        option[id] = input.checked;
+
+    });
+
 
     console.log(option);
 
@@ -803,6 +843,42 @@ const $ = selector => document.querySelector(selector);
 
     const isRPG = stage.implicit_mod === 'hackforplay/rpg-kit-main';
 
+    const isComet = stage.implicit_mod === 'hackforplay/commet-kit-main';
+
+
+    let cometText = '';
+
+    if (isComet) {
+
+        const rawCode = stage.script.raw_code;
+
+        const music = rawCode.match(/Hack\.music *\=[\s\S]+\}/)[0];
+        const musicName = music.match(/(?<=name\: *\').+(?=\')/);
+
+        const hitSE = rawCode.match(/(?<=Hack\.hitSE *\= *).+(?=;)/g).pop().trim();
+
+        const seList = [
+            'osa/bosu19.wav',
+            'osa/clap00.wav',
+            'osa/coin03.wav',
+            'osa/metal03.wav',
+            'osa/metal05.wav',
+            'osa/on06.wav',
+            'osa/pi06.wav',
+            'osa/wood05.wav',
+            'osa/swing14.wav',
+            'osa/whistle00.wav'
+        ];
+
+
+        cometText = `
+game.preload('yukison/${musicName}.mp3', 'yukison/${musicName}-cover.png', '${seList[hitSE]}');
+        `;
+
+
+        console.info(musicName);
+
+    }
 
     isAP = stage.implicit_mod === 'hackforplay/ap-kit-main';
 
@@ -854,6 +930,7 @@ require('tenonno/player-input');
 define(function (require, exports, module) {
 require('${stage.implicit_mod}');
 ${option.fixMod && isRPG ? fixModText : ''}
+${cometText}
 ${stage.script.raw_code}
 });
 
