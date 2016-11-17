@@ -2,6 +2,9 @@
 
 console.clear();
 
+let isAP = null;
+
+let cometSound = null;
 
 
 // ステージ ID
@@ -50,8 +53,6 @@ const resources = [];
 
 
 const emojiCollection = [];
-
-
 
 
 
@@ -218,8 +219,8 @@ class Script {
 
 
                 var t2 = `
-                const $onLoad = require('game-onload');
-                ` + text.substr(0, onload.begin) + 'game.onload = $onLoad;\n' + text.substr(onload.end);
+                const onLoad = require('game-onload');
+                ` + text.substr(0, onload.begin) + 'game.onload = onLoad;\n' + text.substr(onload.end);
 
                 const onloadFile = onload.value.replace(/^game\.onload \=/, 'export default');
 
@@ -251,9 +252,8 @@ class Script {
         }
 
 
-        // this.text = beautify(this.text);
         // SoundCloud は使えないから対策する
-        this.text = this.text.replace(/Hack\.openSoundCloud\(/g, '// Hack.openSoundCloud(');
+        this.text = this.text.replace(/Hack\.openSoundCloud\(/g, '(function(){})(');
 
 
         if (option.alias) {
@@ -285,6 +285,43 @@ class Script {
 
     domConvert() {
 
+
+
+        if (option.ap &&  isAP) {
+
+
+            [
+                'BGM',
+                'input',
+                'cam',
+                'touchMode',
+                'touchX',
+                'touchY',
+                'arrayframe',
+                'makeCounter',
+                'boolCollided'
+
+            ].forEach(variable => {
+
+                this.text = this.text.replace(variable, `window.${variable}`);
+
+            });
+
+
+        }
+
+
+        // menuOpener を削除する
+        if (option.menu && this.name === 'hackforplay/hack') {
+
+            this.text = this.text.replace(/^.*var opener \=.+/gm, text => {
+
+                return text + '\n\t\tvisible: false,';
+            });
+
+
+        }
+
         // ui.enchant が先に呼ばれる対策
         // require.config から修正できる？
         if (this.name === 'soundcloud/sdk-3.0.0.js') {
@@ -294,7 +331,8 @@ export default {
         console.log('soundcloud');
     }
 }
-`;
+            `;
+
         }
 
         this.text = this.text.replace(`this._element.type = 'textarea';`, '// @removed');
@@ -335,6 +373,16 @@ export default {
 
         }
 
+
+
+        if (option.beautify) {
+
+            this.text = beautify(this.text).replace(/^ /gm, '');
+
+        }
+
+
+
     }
 
 
@@ -356,6 +404,8 @@ class Resource {
 
     constructor(name, text, url, type = 'image/png') {
 
+
+        // yukison/birthday-song-cover.png
 
         this.name = name;
         this.text = text;
@@ -401,7 +451,7 @@ const getResourceType = function(url) {
 
 
 
-    const audioTypes = ['mp3'];
+    const audioTypes = ['mp3', 'wav'];
 
     for (let type of audioTypes) {
 
@@ -607,6 +657,22 @@ class H4PConverter {
 
             for (let file of preloadFiles) {
 
+
+                // コメット対策
+
+                if (file === 'Hack.coverImagePath') {
+
+                    continue;
+                    // file = 'yukison/birthday-song-cover.png';
+
+                }
+
+                if (file === 'Hack.soundEffectPath') {
+                    continue;
+
+                }
+
+
                 let url = `https://embed.hackforplay.xyz/hackforplay/${file}`;
 
                 // if (file.startsWith('http')) {
@@ -624,6 +690,9 @@ class H4PConverter {
 
                 loadedFiles.push(url);
                 loadedNames.push(name);
+
+
+
 
                 if (localStorage.getItem(url)) {
 
@@ -694,6 +763,7 @@ class H4PConverter {
 //const stageID = 17511;
 
 const $ = selector => document.querySelector(selector);
+const $$ = selector => Array.from(document.querySelectorAll(selector));
 
 
 (async function() {
@@ -711,6 +781,18 @@ const $ = selector => document.querySelector(selector);
     option.env = $('#option-env').checked;
     option.alias = $('#option-alias').checked;
     option.import = $('#option-import').checked;
+    option.menu = $('#option-menu').checked;
+    option.fixMod = $('#option-fixMod').checked;
+    option.ap = $('#option-ap').checked;
+
+    $$('#options>input').forEach(input => {
+
+        const id = input.id.split('-')[1];
+
+        option[id] = input.checked;
+
+    });
+
 
     console.log(option);
 
@@ -759,6 +841,49 @@ const $ = selector => document.querySelector(selector);
         return;
     }
 
+    const isRPG = stage.implicit_mod === 'hackforplay/rpg-kit-main';
+
+    const isComet = stage.implicit_mod === 'hackforplay/commet-kit-main';
+
+
+    let cometText = '';
+
+    if (isComet) {
+
+        const rawCode = stage.script.raw_code;
+
+        const music = rawCode.match(/Hack\.music *\=[\s\S]+\}/)[0];
+        const musicName = music.match(/(?<=name\: *\').+(?=\')/);
+
+        const hitSE = rawCode.match(/(?<=Hack\.hitSE *\= *).+(?=;)/g).pop().trim();
+
+        const seList = [
+            'osa/bosu19.wav',
+            'osa/clap00.wav',
+            'osa/coin03.wav',
+            'osa/metal03.wav',
+            'osa/metal05.wav',
+            'osa/on06.wav',
+            'osa/pi06.wav',
+            'osa/wood05.wav',
+            'osa/swing14.wav',
+            'osa/whistle00.wav'
+        ];
+
+
+        cometText = `
+game.preload('yukison/${musicName}.mp3', 'yukison/${musicName}-cover.png', '${seList[hitSE]}');
+        `;
+
+
+        console.info(musicName);
+
+    }
+
+    isAP = stage.implicit_mod === 'hackforplay/ap-kit-main';
+
+
+
 
     console.log(stage);
 
@@ -780,14 +905,23 @@ const $ = selector => document.querySelector(selector);
         "boolean",
         "A flag means test mode"
     ],
-    "進捗": [
-        false,
-        "boolean",
-        "進捗どうですか？"
+    "TITLE": [
+        "${stage.title}",
+        "string",
+        "title"
     ]
 }
 </script>
     `;
+
+
+
+    const fixModText = `
+require('tenonno/core-resize-v2');
+require('tenonno/camera-fix-v2');
+require('tenonno/player-input');
+    `;
+
 
 
     // ブラウザ版 H4P で書いてるコード
@@ -795,6 +929,8 @@ const $ = selector => document.querySelector(selector);
 
 define(function (require, exports, module) {
 require('${stage.implicit_mod}');
+${option.fixMod && isRPG ? fixModText : ''}
+${cometText}
 ${stage.script.raw_code}
 });
 
@@ -939,7 +1075,9 @@ import 'game';
 import env from 'env';
 
 env.VIEW = enchant.Core.instance.rootScene._layers.Canvas._element;
-Hack._exportJavascriptHint = function() {};
+Hack._exportJavascriptHint = () => {};
+
+
 
 Hack.start();
 
@@ -966,7 +1104,7 @@ const style = document.createElement('style');
 style.textContent = \`
 
 textarea.log {
-    color: #fff,
+    color: #fff;
     font: bold large PixelMplus, sans-serif;
     border: 3px solid #fff;
     border-radius: 10px;
@@ -1081,6 +1219,22 @@ enchant.WebAudioSound.load = function(src, type, callback, onerror) {
     ${dom}
 
 
+
+    <script
+      class="${namespace}"
+      name=".babelrc"
+      data-type="application/json"
+      author-name=""
+      author-url=""
+      type="hack"
+    >
+    {
+    	"presets": [
+    		"es2015"
+    	]
+    }</script>
+
+
     ${option.env ? env : ''}
 
 
@@ -1108,6 +1262,32 @@ enchant.WebAudioSound.load = function(src, type, callback, onerror) {
 
     download.click();
 
+    (async function() {
+
+
+        const res = await fetch(stage.thumbnail);
+
+
+        const d = await res.blob();
+
+
+
+
+        const download = document.createElement('a');
+
+        download.download = 'thumbnail.png';
+
+
+
+        if (option.file) {
+            download.download = stage.title + '.png';
+        }
+
+        download.href = window.URL.createObjectURL(d);
+
+        download.click();
+
+    })();
 
 
 
