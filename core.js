@@ -287,7 +287,11 @@ class Script {
 
 
 
+<<<<<<< HEAD
         if (option.ap &&  isAP) {
+=======
+        if (option.ap &&  isAP) {
+>>>>>>> origin/master
 
 
             [
@@ -1276,6 +1280,7 @@ enchant.WebAudioSound.load = function(src, type, callback, onerror) {
         const download = document.createElement('a');
 
         download.download = 'thumbnail.png';
+
 
 
 
