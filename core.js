@@ -17,7 +17,7 @@ const downloadFileName = 'h4p.html';
 
 // h4p.js の URL
 // const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p.js';
-const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p-alpha-24.js';
+const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p-alpha-25.js';
 
 
 // 読み込めないファイルの対策
@@ -287,12 +287,7 @@ class Script {
 
 
 
-<<<<<<< HEAD
         if (option.ap &&  isAP) {
-=======
-        if (option.ap &&  isAP) {
->>>>>>> origin/master
-
 
             [
                 'BGM',
@@ -1237,6 +1232,48 @@ enchant.WebAudioSound.load = function(src, type, callback, onerror) {
     		"es2015"
     	]
     }</script>
+
+
+
+    <script
+      class="${namespace}"
+      name="README.md"
+      data-type="text/x-markdown"
+
+
+      author-name=""
+      author-url=""
+      type="hack"
+    >
+    # アプリのタイトル
+    これは、こういうかんじのアプリです。←っていうのを、ここに書けます
+    ## 使い方
+    1. まずは「はじめに」をクリック
+    2. つぎに文字を書きかえます
+    3. \`README\` というタブをとじます
+    ## テクニック
+    ふつうの文字にあきたら、 **あんなこと** とか *こんなこと* もやってみよう
+    \`\`\`
+    // なんと、コードも書けちゃう！
+    alert('こんにちは！');
+    \`\`\`
+    > こういう記号の書き方を\`マークダウン\`って言うらしいよ。 ~~へんなの！~~
+    - - -
+    ## 謝辞
+    - このアプリを作るとき、
+    - おせわになった人がいたら、
+    - ここに名前を書いてあげるといいよ。
+
+    - - -
+
+    ## オリジナル
+
+    このステージは、ブラウザ版 HackforPlay から変換されました。
+
+    [ブラウザ版で遊ぶ](https://hackforplay.xyz/s/?id=${stageID})
+
+    <\/script>
+
 
 
     ${option.env ? env : ''}
