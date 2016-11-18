@@ -17,7 +17,7 @@ const downloadFileName = 'h4p.html';
 
 // h4p.js の URL
 // const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p.js';
-const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p-alpha-25.js';
+const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p-alpha-26.js';
 
 
 // 読み込めないファイルの対策
