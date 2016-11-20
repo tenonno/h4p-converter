@@ -59,6 +59,7 @@ const emojiCollection = [];
 const option = {};
 
 
+const hack_hint_collection = [];
 
 
 // String.insert
@@ -287,7 +288,7 @@ class Script {
 
 
 
-        if (option.ap &&  isAP) {
+        if (option.ap && isAP) {
 
             [
                 'BGM',
@@ -379,6 +380,109 @@ export default {
             this.text = beautify(this.text).replace(/^ /gm, '');
 
         }
+
+        if (this.name !== 'hackforplay/rpg-kit-smartassets') {
+
+
+            (function(t, n) {
+
+
+                const getLine = (text, num, from) => {
+
+                    var result = '';
+
+                    for (num; num--;) {
+
+                        const index = text.indexOf('\n', from) + 1;
+
+                        if (!index) {
+
+                            result += text.substr(from);
+                            break;
+
+                        } else {
+                            //	console.log(index, from);
+                            result += text.substr(from, index - from);
+
+                            from = index;
+                        }
+
+                    }
+
+                    return result;
+                };
+
+                const reg = /Hack\.hint\s*\=/g;
+
+                let match = null;
+
+                while (match = reg.exec(t)) {
+
+                    // console.info(match);
+
+                    for (let i = 1; i < 100; ++i) { //; i--;) {
+
+                        let r = getLine(t, i, match.index);
+
+
+
+                        r = r.replace(/Hack\.hint\s*\=/, 'window.hack_hint =');
+
+                        //console.warn(r);
+
+                        var error = null;
+
+                        try {
+                            eval(r);
+
+                        } catch (e) {
+                            error = e;
+                        }
+
+                        //console.error(error);
+                        if (error) continue;
+
+                        // console.info(r);
+                        break;
+
+
+                    }
+
+
+
+
+                    let hack_hint = window.hack_hint;
+
+
+                    if (typeof hack_hint === 'function') {
+
+                        hack_hint = hack_hint.toString();
+
+                        hack_hint = hack_hint.substr(13);
+                        hack_hint = hack_hint.substr(0, hack_hint.length - 1);
+
+                    }
+
+                    console.log('111111111111111111111', n);
+                    hack_hint_collection.push(
+                        beautify(hack_hint)
+                    );
+
+
+                }
+
+
+
+            })(this.text, this.name);
+
+
+
+
+        }
+
+
+
+
 
 
 
@@ -1004,7 +1108,6 @@ ${stage.script.raw_code}
     }
 
 
-
     const h4p = await getH4P();
 
     let dom = '';
@@ -1024,6 +1127,41 @@ RPGObject.prototype.fetch = function(name) {
     });
 };
     `;
+
+
+
+
+
+
+
+
+
+
+        let hack_hint_dom = '';
+
+        const hack_hint_collection_2 = hack_hint_collection.map(hint => `
+    \`\`\`
+    ${hint}
+    \`\`\`
+            `).join('');
+
+            console.dir(hack_hint_collection.length, hack_hint_collection_2);
+
+
+        if (hack_hint_collection.length) {
+
+            hack_hint_dom = `
+
+    # 魔導書
+    ${hack_hint_collection_2}
+
+            `;
+
+        }
+
+
+
+
 
     const html = `
 
@@ -1247,6 +1385,8 @@ enchant.WebAudioSound.load = function(src, type, callback, onerror) {
     >
     # アプリのタイトル
     これは、こういうかんじのアプリです。←っていうのを、ここに書けます
+${hack_hint_dom}
+
     ## 使い方
     1. まずは「はじめに」をクリック
     2. つぎに文字を書きかえます
@@ -1297,6 +1437,9 @@ enchant.WebAudioSound.load = function(src, type, callback, onerror) {
     if (option.file) {
         download.download = stage.Title + '.html';
     }
+
+
+    console.info(hack_hint_collection);
 
 
     download.href = window.URL.createObjectURL(htmlBlob);
