@@ -1152,7 +1152,7 @@ RPGObject.prototype.fetch = function(name) {
 
             hack_hint_dom = `
 
-    # 魔導書
+    ## 魔導書
     ${hack_hint_collection_2}
 
             `;
