@@ -1205,7 +1205,22 @@ RPGObject.prototype.fetch = function(name) {
 
 <head>
 	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>HackforPlay</title>
+    <style media="screen">
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    .h4p__app {
+        padding: 0;
+        margin: 0;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+    }
+    </style>
 </head>
 
 <body>
