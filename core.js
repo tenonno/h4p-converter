@@ -17,7 +17,10 @@ const downloadFileName = 'h4p.html';
 
 // h4p.js の URL
 // const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p.js';
-const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p-alpha-27.js';
+
+
+
+// const h4pURL = 'https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p-alpha-27.js';
 
 
 // 読み込めないファイルの対策
@@ -287,6 +290,7 @@ class Script {
     domConvert() {
 
 
+        this.text = this.text.replace(/editor\/index\.html/g, '');
 
         if (option.ap && isAP) {
 
@@ -576,6 +580,38 @@ const getResourceType = function(url) {
 
 // h4p.js を script タグに変換して取得する
 const getH4P = async function() {
+
+
+    // https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/h4p-alpha-27.js';
+
+    let h4pURL;
+
+    {
+
+        const github = 'https://api.github.com/repos/teramotodaiki/h4p/contents/dist';
+
+        const files = await (await fetch(github)).json();
+
+        const textCompare = (a, b) => (a > b) - (a < b);
+
+        const ignore = [
+            'h4p.js'
+        ];
+
+
+        const file = files
+            .map(v => v.name)
+            .filter(v => !ignore.includes(v))
+            .filter(v => v.endsWith('.js'))
+            .sort(textCompare)
+            .pop();
+
+        console.info('h4p js: ', file);
+
+        h4pURL = `https://raw.githubusercontent.com/teramotodaiki/h4p/master/dist/${file}`;
+
+    }
+
 
     const url = h4pURL;
 
@@ -1136,28 +1172,27 @@ RPGObject.prototype.fetch = function(name) {
 
 
 
+    let hack_hint_dom = '';
 
-        let hack_hint_dom = '';
-
-        const hack_hint_collection_2 = hack_hint_collection.map(hint => `
+    const hack_hint_collection_2 = hack_hint_collection.map(hint => `
     \`\`\`
     ${hint}
     \`\`\`
             `).join('');
 
-            console.dir(hack_hint_collection.length, hack_hint_collection_2);
+    console.dir(hack_hint_collection.length, hack_hint_collection_2);
 
 
-        if (hack_hint_collection.length) {
+    if (hack_hint_collection.length) {
 
-            hack_hint_dom = `
+        hack_hint_dom = `
 
     ## 魔導書
     ${hack_hint_collection_2}
 
             `;
 
-        }
+    }
 
 
 
@@ -1261,6 +1296,7 @@ import '${stage.implicit_mod}';
 ${stage.implicit_mod === 'hackforplay/rpg-kit-main' ? fetchRPG : ''}
 
 // window._Promise = Promise;
+
 
 enchant.Surface.load = function(src, callback, onerror) {
     const image = new Image();
