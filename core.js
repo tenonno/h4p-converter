@@ -1206,6 +1206,7 @@ RPGObject.prototype.fetch = function(name) {
 <head>
 	<meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="feeles-provider" content='{"publishUrl":"https://hackit-feeles.azurewebsites.net/deployments/create"}'>
     <title>HackforPlay</title>
     <style media="screen">
     body {
@@ -1220,7 +1221,11 @@ RPGObject.prototype.fetch = function(name) {
         width: 100vw;
         height: 100vh;
     }
+    .CodeMirror-hints {
+        z-index:1000
+    }
     </style>
+
 </head>
 
 <body>
